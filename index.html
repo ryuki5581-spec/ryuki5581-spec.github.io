@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - PT. Softstudio Network</title>
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- SheetJS untuk export XLS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============================================
+         HALAMAN LOGIN
+         ============================================ -->
+    <div id="loginPage">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <h1>PT. Softstudio Network</h1>
+                <p>Sistem Manajemen Inventaris</p>
+            </div>
+
+            <div id="loginError" class="login-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>Username atau password salah</span>
+            </div>
+
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="loginUser">Username</label>
+                    <input type="text" id="loginUser" class="form-input" placeholder="Masukkan username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPass">Password</label>
+                    <input type="password" id="loginPass" class="form-input" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:8px">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk
+                </button>
+                <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-light)">
+                    Demo: admin / admin123
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================
+         APLIKASI UTAMA
+         ============================================ -->
+    <div id="app" class="hidden">
+
+        <!-- Overlay sidebar mobile -->
+        <div id="sidebarOverlay"></div>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside id="sidebar">
+            <div class="sidebar-brand">
+                <div class="s-icon"><i class="fa-solid fa-network-wired"></i></div>
+                <div class="s-text">
+                    <h2>Softstudio</h2>
+                    <span>Inventory System</span>
+                </div>
+            </div>
+
+            <nav id="sidebarNav">
+                <div class="nav-label">Menu Utama</div>
+                <a href="#" data-page="dashboard">
+                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                </a>
+                <a href="#" data-page="inventory">
+                    <i class="fa-solid fa-boxes-stacked"></i> Inventory
+                </a>
+                <a href="#" data-page="totalAset">
+                    <i class="fa-solid fa-coins"></i> Total Aset
+                </a>
+
+                <div class="nav-label">Operasional</div>
+                <a href="#" data-page="ticket">
+                    <i class="fa-solid fa-ticket"></i> Ticket Perbaikan
+                    <span id="ticketBadge" class="nav-badge" style="display:none">0</span>
+                </a>
+                <a href="#" data-page="barangKeluar">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Barang Keluar
+                </a>
+
+                <div class="nav-label">Lainnya</div>
+                <a href="#" data-page="activityLog">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Aktivitas
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="https://web.whatsapp.com" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp Web
+                </a>
+                <a href="#" id="logoutBtn" class="logout-link">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div id="mainContent">
+
+            <!-- Top Bar -->
+            <header id="topBar">
+                <button id="menuToggle" aria-label="Toggle menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <span id="pageTitle" class="topbar-title">Dashboard</span>
+                <div class="topbar-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="globalSearch" placeholder="Cari barang...">
+                </div>
+                <div class="topbar-user">
+                    <div class="avatar">AD</div>
+                    <div class="u-info">
+                        <div class="u-name">Admin</div>
+                        <div class="u-role">Administrator</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ===== HALAMAN: DASHBOARD ===== -->
+            <section id="dashboardPage" class="page">
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Jenis Barang</div>
+                            <div class="stat-value" id="statTotalItems">0</div>
+                            <div class="stat-sub">Terdaftar di sistem</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon green"><i class="fa-solid fa-cubes"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Unit Stok</div>
+                            <div class="stat-value" id="statTotalStok">0</div>
+                            <div class="stat-sub">Keseluruhan barang</div>
+                        </div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-icon blue"><i class="fa-solid fa-coins"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Nilai Aset</div>
+                            <div class="stat-value" id="statTotalAset">Rp0</div>
+                            <div class="stat-sub">Berdasarkan stok x harga</div>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon orange"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Stok Rendah</div>
+                            <div class="stat-value" id="statLowStock">0</div>
+                            <div class="stat-sub">Item dengan stok &le; 5</div>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon red"><i class="fa-solid fa-ticket"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Ticket Aktif</div>
+                            <div class="stat-value" id="statActiveTickets">0</div>
+                            <div class="stat-sub">Menunggu & diproses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <!-- Chart Kategori -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-pie" style="margin-right:8px;color:var(--primary-light)"></i>Distribusi Aset per Kategori</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Stok -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-bar" style="margin-right:8px;color:var(--primary-light)"></i>Top Stok Tertinggi</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="stockChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <!-- Stok Rendah -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-exclamation-circle" style="margin-right:8px;color:var(--warning)"></i>Peringatan Stok Rendah</h3>
+                        </div>
+                        <div class="card-body" id="lowStockList">
+                        </div>
+                    </div>
+
+                    <!-- Aktivitas Terbaru -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-clock" style="margin-right:8px;color:var(--primary-light)"></i>Aktivitas Terbaru</h3>
+                        </div>
+                        <div class="card-body" id="recentActivities">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HALAMAN: INVENTORY ===== -->
+            <section id="inventoryPage" class="page hidden">
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="openAddItem()">
+                        <i class="fa-solid fa-plus"></i> Tambah Barang
+                    </button>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="invSearch" placeholder="Cari kode, nama, atau tipe...">
+                    </div>
+                    <select id="filterType" class="form-input">
+                        <option value="">Semua Tipe</option>
+                    </select>
+                    <button class="btn btn-success" onclick="exportToXLS()">
+                        <i class="fa-solid fa-file-excel"></i> Export XLS
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-body no-pad">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Kode Barang</th>
+                                        <th>Nama Barang</th>
+                                        <th>Stok</th>
+                                        <th>Type</th>
+                                        <th>Masuk</th>
+                                        <th>Keluar</th>
+                                        <th>Harga</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                        <span id="invInfo" style="font-size:13px;color:var(--text-light)"></span>
+                        <div id="invPagination" class="pagination"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HALAMAN: TOTAL ASET ===== -->
+            <section id="totalAsetPage" class="page hidden">
+                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+                    <div class="stat-card blue">
+                        <div class="stat-icon blue"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Nilai Aset</div>
+                            <div class="stat-value" id="asetTotalNilai" style="font-size:20px">Rp0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon green"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Jumlah Jenis</div>
+                            <div class="stat-value" id="asetTotalJenis" style="font-size:20px">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-icon blue"><i class="fa-solid fa-cubes"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Unit</div>
+                            <div class="stat-value" id="asetTotalUnit" style="font-size:20px">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon orange"><i class="fa-solid fa-calculator"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Rata-rata Harga</div>
+                            <div class="stat-value" id="asetAvgHarga" style="font-size:20px">Rp0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list" style="margin-right:8px;color:var(--primary-light)"></i>Rincian per Kategori</h3>
+                        </div>
+                        <div class="card-body" id="categoryList" style="max-height:420px;overflow-y:auto">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-pie" style="margin-right:8px;color:var(--primary-light)"></i>Proporsi Nilai Aset</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="height:400px">
+                                <canvas id="asetPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HALAMAN: TICKET PERBAIKAN ===== -->
+            <section id="ticketPage" class="page hidden">
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="openAddTicket()">
+                        <i class="fa-solid fa-plus"></i> Buat Ticket
+                    </button>
+                    <div style="flex:1"></div>
+                    <button class="btn btn-outline" onclick="sendAllActiveToNOC()">
+                        <i class="fa-brands fa-whatsapp"></i> Kirim Semua Aktif ke NOC
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-body no-pad">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Ticket ID</th>
+                                        <th>Barang</th>
+                                        <th>Teknisi</th>
+                                        <th>Prioritas</th>
+                                        <th>Status</th>
+                                        <th>Tanggal</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HALAMAN: BARANG KELUAR ===== -->
+            <section id="barangKeluarPage" class="page hidden">
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="openBarangKeluarManual()">
+                        <i class="fa-solid fa-plus"></i> Input Barang Keluar
+                    </button>
+                    <div style="flex:1"></div>
+                    <span style="font-size:13px;color:var(--text-light)">
+                        <i class="fa-solid fa-info-circle"></i>
+                        Barang keluar juga bisa diinput dari ticket yang sudah selesai
+                    </span>
+                </div>
+
+                <div class="card">
+                    <div class="card-body no-pad">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Ticket ID</th>
+                                        <th>Kode Barang</th>
+                                        <th>Nama Barang</th>
+                                        <th>Jumlah</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="keluarBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HALAMAN: RIWAYAT AKTIVITAS ===== -->
+            <section id="activityLogPage" class="page hidden">
+                <div class="action-bar">
+                    <button class="btn btn-outline btn-sm" onclick="clearActivities()">
+                        <i class="fa-solid fa-broom"></i> Bersihkan Log
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body" id="activityLogContent" style="max-height:70vh;overflow-y:auto">
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /mainContent -->
+    </div><!-- /app -->
+
+    <!-- ============================================
+         MODAL: TAMBAH/EDIT BARANG
+         ============================================ -->
+    <div id="itemModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalItemTitle">Tambah Barang Baru</h3>
+                <button class="btn-icon modal-cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Kode Barang</label>
+                    <input type="text" id="itemKode" class="form-input" placeholder="SS0001">
+                </div>
+                <div class="form-group">
+                    <label>Nama Barang</label>
+                    <input type="text" id="itemNama" class="form-input" placeholder="Nama barang">
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Stok</label>
+                        <input type="number" id="itemStok" class="form-input" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Harga (Rp)</label>
+                        <input type="number" id="itemHarga" class="form-input" placeholder="0" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Tipe Barang</label>
+                    <input type="text" id="itemType" class="form-input" placeholder="Otomatis terisi berdasarkan nama (opsional)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost modal-cancel">Batal</button>
+                <button class="btn btn-primary" id="saveItemBtn">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODAL: BUAT TICKET
+         ============================================ -->
+    <div id="ticketModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Buat Ticket Perbaikan</h3>
+                <button class="btn-icon modal-cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Ticket ID</label>
+                    <input type="text" id="ticketId" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Barang</label>
+                    <input type="text" id="ticketBarang" class="form-input" placeholder="Nama barang yang diperbaiki">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Masalah</label>
+                    <textarea id="ticketDeskripsi" class="form-input" placeholder="Jelaskan masalah yang terjadi..."></textarea>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Teknisi</label>
+                        <select id="ticketTeknisi" class="form-input">
+                            <option value="">-- Pilih Teknisi --</option>
+                            <option value="Sahruramadhan">Sahruramadhan</option>
+                            <option value="Amin Maulana">Amin Maulana</option>
+                            <option value="Rusli Hardiansyah">Rusli Hardiansyah</option>
+                            <option value="Egi Febriansyah">Egi Febriansyah</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Prioritas</label>
+                        <select id="ticketPrioritas" class="form-input">
+                            <option value="Rendah">Rendah</option>
+                            <option value="Sedang" selected>Sedang</option>
+                            <option value="Tinggi">Tinggi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lokasi</label>
+                    <input type="text" id="ticketLokasi" class="form-input" placeholder="Lokasi perbaikan (opsional)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost modal-cancel">Batal</button>
+                <button class="btn btn-primary" id="saveTicketBtn">
+                    <i class="fa-solid fa-paper-plane"></i> Buat Ticket
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODAL: DETAIL TICKET
+         ============================================ -->
+    <div id="ticketDetailModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Detail Ticket</h3>
+                <button class="btn-icon modal-cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="ticketDetailContent">
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODAL: BARANG KELUAR
+         ============================================ -->
+    <div id="keluarModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Input Barang Keluar</h3>
+                <button class="btn-icon modal-cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Referensi Ticket</label>
+                    <input type="text" id="keluarTicketInfo" class="form-input" readonly>
+                    <input type="hidden" id="keluarTicketId">
+                </div>
+                <div class="form-group">
+                    <label>Barang</label>
+                    <select id="keluarBarang" class="form-input">
+                        <option value="">-- Pilih Barang --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah</label>
+                    <input type="number" id="keluarJumlah" class="form-input" placeholder="0" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <input type="text" id="keluarKeterangan" class="form-input" placeholder="Keterangan tambahan (opsional)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost modal-cancel">Batal</button>
+                <button class="btn btn-primary" id="saveKeluarBtn">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODAL: KONFIRMASI HAPUS
+         ============================================ -->
+    <div id="confirmModal" class="modal-overlay hidden">
+        <div class="modal-box" style="width:420px">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);margin-right:8px"></i>Konfirmasi</h3>
+                <button class="btn-icon modal-cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" style="font-size:14px;color:var(--text-mid)"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost modal-cancel">Batal</button>
+                <button class="btn btn-danger" id="confirmYes">
+                    <i class="fa-solid fa-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Script -->
+    <script src="script.js"></script>
+
+    <!-- Override populateBarangOptions agar dipanggil saat modal keluar dibuka -->
+    <script>
+        /* Patch: setiap kali modal keluar dibuka, isi opsi barang */
+        const origOpenManual = openBarangKeluarManual;
+        openBarangKeluarManual = function() {
+            populateBarangOptions();
+            origOpenManual();
+        };
+        const origOpenFromTicket = openBarangKeluarFromTicket;
+        openBarangKeluarFromTicket = function(id) {
+            populateBarangOptions();
+            origOpenFromTicket(id);
+        };
+    </script>
+
+    <!-- Kirim semua ticket aktif ke NOC -->
+    <script>
+        function sendAllActiveToNOC() {
+            const active = state.tickets.filter(t => t.status !== 'Selesai');
+            if (active.length === 0) {
+                showToast('Tidak ada ticket aktif untuk dikirim', 'warning');
+                return;
+            }
+
+            let msg = `*LAPORAN TICKET AKTIF - PT.SOFTSTUDIO NETWORK*\n`;
+            msg += `Total: ${active.length} ticket aktif\n`;
+            msg += `Tanggal: ${formatDate(new Date().toISOString())}\n`;
+            msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+            active.forEach((t, i) => {
+                msg += `*${i + 1}. ${t.id}*\n`;
+                msg += `   Barang: ${t.barang}\n`;
+                msg += `   Teknisi: ${t.teknisi}\n`;
+                msg += `   Prioritas: ${t.prioritas}\n`;
+                msg += `   Status: ${t.status}\n`;
+                msg += `   Lokasi: ${t.lokasi || '-'}\n`;
+                msg += `   Deskripsi: ${t.deskripsi}\n\n`;
+            });
+
+            const url = `https://wa.me/${state.nocWaNumber}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            addActivity(`Mengirim ${active.length} ticket aktif ke grup NOC`, 'ticket');
+            saveState();
+            showToast('Membuka WhatsApp untuk kirim laporan ticket...');
+        }
+
+        function clearActivities() {
+            if (state.activities.length === 0) {
+                showToast('Log aktivitas sudah kosong', 'warning');
+                return;
+            }
+            document.getElementById('confirmMessage').textContent = 'Bersihkan semua riwayat aktivitas?';
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.getElementById('confirmYes').innerHTML = '<i class="fa-solid fa-broom"></i> Bersihkan';
+            document.getElementById('confirmYes').className = 'btn btn-warning';
+            document.getElementById('confirmYes').onclick = () => {
+                state.activities = [];
+                saveState();
+                closeModal('confirmModal');
+                renderActivityLog();
+                /* Kembalikan tombol konfirmasi ke default */
+                document.getElementById('confirmYes').innerHTML = '<i class="fa-solid fa-trash"></i> Hapus';
+                document.getElementById('confirmYes').className = 'btn btn-danger';
+                showToast('Riwayat aktivitas dibersihkan');
+            };
+        }
+    </script>
+
+</body>
+</html>

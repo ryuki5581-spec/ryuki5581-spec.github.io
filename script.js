@@ -94,7 +94,7 @@ const DEFAULT_INVENTORY = [
 const TECHNICIANS = ['Sahruramadhan', 'Amin Maulana', 'Rusli Hardiansyah', 'Egi Febriansyah'];
 
 /* Kredensial login (demo) */
-const CREDENTIALS = { username: 'admin', password: 'admin123' };
+const CREDENTIALS = { username: 'sahruram', password: 'admin123' };
 
 /* Nomor WhatsApp NOC (ganti sesuai kebutuhan) */
 const NOC_WA_NUMBER = '6281234567890';
